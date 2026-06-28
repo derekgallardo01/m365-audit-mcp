@@ -1,0 +1,297 @@
+
+==============================================================================
+  Tool 1: check_tenant_privacy_config()
+==============================================================================
+
+{
+  "tenant": {
+    "id": "fc8e0a3d-1234-4567-8901-abcdef123456",
+    "displayName": "Acme Manufacturing",
+    "defaultDomain": "acmemfg.onmicrosoft.com",
+    "dataLocation": {
+      "region": "United States",
+      "geo": "us"
+    }
+  },
+  "summary": {
+    "items_total": 4,
+    "items_verified": 3,
+    "items_outstanding": 1
+  },
+  "items": {
+    "data_residency": {
+      "verified": true,
+      "region": "United States",
+      "evidence": "M365 admin center -> Organization profile -> Data location (verified 2026-06-20)"
+    },
+    "copilot_no_public_training": {
+      "verified": true,
+      "source": "Microsoft Product Terms (DPA) + Copilot data-handling article",
+      "retrieved": "2026-06-20"
+    },
+    "azure_openai_no_retention": {
+      "verified": false,
+      "reason": "no-retention option not yet requested from Microsoft",
+      "action_required": "Submit Modified Content Filtering + no-retention request via Microsoft account team"
+    },
+    "baa_in_scope": {
+      "verified": true,
+      "agreement": "Microsoft BAA signed 2024-03, renewed 2026-03",
+      "services_covered": [
+        "Exchange",
+        "SharePoint",
+        "OneDrive",
+        "Teams",
+        "M365 Copilot"
+      ]
+    }
+  }
+}
+
+==============================================================================
+  Tool 2: find_orphaned_documents()  (default: days_threshold=180)
+==============================================================================
+
+{
+  "criteria": {
+    "days_threshold": 180,
+    "include_no_owner": true
+  },
+  "count": 2,
+  "documents": [
+    {
+      "id": "doc-004",
+      "name": "Legacy Marketing Plan 2022.pptx",
+      "site": "/sites/marketing",
+      "owner": "former.employee@acmemfg.com",
+      "lastAccessed": "2023-02-14T10:45:00Z",
+      "sensitivityLabel": "General",
+      "reason": "owner appears to have left the organization",
+      "recommendedAction": "reassign"
+    },
+    {
+      "id": "doc-002",
+      "name": "Q1 Board Minutes 2024.docx",
+      "site": "/sites/board",
+      "owner": null,
+      "lastAccessed": "2024-08-02T11:14:00Z",
+      "sensitivityLabel": "Confidential - Board Only",
+      "reason": "no owner",
+      "recommendedAction": "reassign or archive"
+    }
+  ]
+}
+
+==============================================================================
+  Tool 3: audit_conditional_access_policies()
+==============================================================================
+
+{
+  "count_total": 3,
+  "count_enabled": 2,
+  "count_flagged": 1,
+  "policies": [
+    {
+      "id": "ca-001",
+      "displayName": "Require MFA for all users",
+      "state": "enabled",
+      "conditions": {
+        "users": "All users",
+        "applications": "All cloud apps"
+      },
+      "grantControls": [
+        "mfa"
+      ]
+    },
+    {
+      "id": "ca-002",
+      "displayName": "Require compliant device for PHI access",
+      "state": "enabled",
+      "conditions": {
+        "users": "PHI-Authorized-Users",
+        "applications": "SharePoint sites tagged PHI"
+      },
+      "grantControls": [
+        "compliantDevice",
+        "domainJoinedDevice"
+      ]
+    },
+    {
+      "id": "ca-003",
+      "displayName": "Block legacy authentication",
+      "state": "reportOnly",
+      "conditions": {
+        "users": "All users",
+        "clientAppTypes": [
+          "other"
+        ]
+      },
+      "grantControls": [
+        "block"
+      ]
+    }
+  ],
+  "flagged": [
+    {
+      "id": "ca-003",
+      "displayName": "Block legacy authentication",
+      "state": "reportOnly",
+      "recommendation": "Promote to enabled - confirm via report-only insights first"
+    }
+  ]
+}
+
+==============================================================================
+  Tool 4a: list_dlp_policies()  (unfiltered)
+==============================================================================
+
+{
+  "filter": null,
+  "count": 2,
+  "policies": [
+    {
+      "id": "dlp-pii-us",
+      "displayName": "PII (US) - SSN + DOB + Credit Card",
+      "state": "enabled",
+      "locations": [
+        "Exchange",
+        "SharePoint",
+        "OneDrive",
+        "Teams"
+      ],
+      "sensitiveTypes": [
+        "U.S. Social Security Number",
+        "Credit Card Number",
+        "U.S. Date of Birth"
+      ]
+    },
+    {
+      "id": "dlp-phi",
+      "displayName": "PHI - Medical Record Numbers + ICD codes",
+      "state": "enabled",
+      "locations": [
+        "SharePoint",
+        "OneDrive",
+        "Teams"
+      ],
+      "sensitiveTypes": [
+        "U.S. Medical Record Number",
+        "ICD-10 codes"
+      ]
+    }
+  ]
+}
+
+==============================================================================
+  Tool 4b: list_dlp_policies(location='Teams')
+==============================================================================
+
+{
+  "filter": {
+    "location": "Teams"
+  },
+  "count": 2,
+  "policies": [
+    {
+      "id": "dlp-pii-us",
+      "displayName": "PII (US) - SSN + DOB + Credit Card",
+      "state": "enabled",
+      "locations": [
+        "Exchange",
+        "SharePoint",
+        "OneDrive",
+        "Teams"
+      ],
+      "sensitiveTypes": [
+        "U.S. Social Security Number",
+        "Credit Card Number",
+        "U.S. Date of Birth"
+      ]
+    },
+    {
+      "id": "dlp-phi",
+      "displayName": "PHI - Medical Record Numbers + ICD codes",
+      "state": "enabled",
+      "locations": [
+        "SharePoint",
+        "OneDrive",
+        "Teams"
+      ],
+      "sensitiveTypes": [
+        "U.S. Medical Record Number",
+        "ICD-10 codes"
+      ]
+    }
+  ]
+}
+
+==============================================================================
+  Tool 5a: summarize_copilot_usage()  (tenant + by-team, ascending adoption)
+==============================================================================
+
+{
+  "summary": {
+    "team_count": 3,
+    "active_users_total": 54,
+    "total_users_total": 95,
+    "prompts_30d_total": 3439,
+    "adoptionPct": 56.8
+  },
+  "by_team": [
+    {
+      "team_id": "team-clinical",
+      "displayName": "Clinical Operations",
+      "activeUsers": 12,
+      "totalUsers": 45,
+      "adoptionPct": 26.7,
+      "adoptionStatus": "low"
+    },
+    {
+      "team_id": "team-engineering",
+      "displayName": "Engineering",
+      "activeUsers": 18,
+      "totalUsers": 22,
+      "adoptionPct": 81.8,
+      "adoptionStatus": "healthy"
+    },
+    {
+      "team_id": "team-marketing",
+      "displayName": "Marketing",
+      "activeUsers": 24,
+      "totalUsers": 28,
+      "adoptionPct": 85.7,
+      "adoptionStatus": "healthy"
+    }
+  ]
+}
+
+==============================================================================
+  Tool 5b: summarize_copilot_usage(team_id='team-clinical')
+==============================================================================
+
+{
+  "team_id": "team-clinical",
+  "displayName": "Clinical Operations",
+  "activeUsers": 12,
+  "totalUsers": 45,
+  "promptsLast30Days": 89,
+  "topPrompts": [
+    "Summarize this patient intake form (PII redacted)",
+    "Draft a follow-up email for missed appointments"
+  ],
+  "adoptionPct": 26.7,
+  "adoptionStatus": "low"
+}
+
+==============================================================================
+  Tool 5c: summarize_copilot_usage(team_id='team-does-not-exist')  (error path)
+==============================================================================
+
+{
+  "error": "Unknown team_id: team-does-not-exist",
+  "available": [
+    "team-marketing",
+    "team-clinical",
+    "team-engineering"
+  ]
+}

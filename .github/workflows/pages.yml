@@ -1,0 +1,161 @@
+name: Deploy live demo to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package (so audit_tools is importable)
+        run: pip install --quiet -e .
+
+      - name: Generate the static demo report
+        run: |
+          mkdir -p site
+          python - <<'PY'
+          import html, json, sys
+          sys.path.insert(0, "src")
+          from m365_audit_mcp import audit_tools
+
+          # Each entry: tool label, call producing output, the natural-language
+          # question that would have triggered it (for the Claude-style transcript).
+          CASES = [
+              ("check_tenant_privacy_config()",
+               "Summarize our M365 tenant's privacy posture and flag anything outstanding.",
+               audit_tools.check_tenant_privacy_config()),
+              ("find_orphaned_documents()",
+               "What documents look orphaned across our SharePoint tenant?",
+               audit_tools.find_orphaned_documents()),
+              ("audit_conditional_access_policies()",
+               "Are any of our Conditional Access policies still report-only?",
+               audit_tools.audit_conditional_access_policies()),
+              ("list_dlp_policies(location='Teams')",
+               "What DLP policy covers Teams chats?",
+               audit_tools.list_dlp_policies(location="Teams")),
+              ("summarize_copilot_usage()",
+               "Where is Microsoft 365 Copilot rollout stalling?",
+               audit_tools.summarize_copilot_usage()),
+          ]
+
+          def card(label, question, result):
+              j = html.escape(json.dumps(result, indent=2))
+              return f"""
+                <div class="card">
+                  <div class="kicker">User asks</div>
+                  <div class="question">{html.escape(question)}</div>
+                  <div class="kicker tool">MCP tool invoked</div>
+                  <div class="tool-name"><code>{html.escape(label)}</code></div>
+                  <div class="kicker">Tool returns (JSON)</div>
+                  <pre>{j}</pre>
+                </div>
+              """
+
+          page = f"""<!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>M365 Audit MCP - live demo</title>
+            <style>
+              :root {{
+                --primary: #581c87; --accent: #9333ea;
+                --bg: #faf5ff; --border: #e9d5ff;
+                --ink: #1f1b2e; --muted: #6b5b7e;
+              }}
+              * {{ box-sizing: border-box; }}
+              body {{
+                margin: 0; font-family: 'Segoe UI', system-ui, sans-serif;
+                background: var(--bg); color: var(--ink); line-height: 1.5;
+              }}
+              .hero {{
+                background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+                color: white; padding: 50px 24px 60px;
+              }}
+              .hero-inner {{ max-width: 900px; margin: 0 auto; }}
+              .hero .kicker {{ font-size: 13px; letter-spacing: 2px; opacity: .75; text-transform: uppercase; }}
+              .hero h1 {{ font-size: 38px; margin: 10px 0 14px; line-height: 1.1; }}
+              .hero p {{ font-size: 17px; margin: 0; opacity: .92; max-width: 720px; }}
+              .container {{ max-width: 900px; margin: -30px auto 60px; padding: 0 24px; }}
+              .card {{
+                background: white; border: 1px solid var(--border); border-radius: 12px;
+                padding: 24px 28px; margin: 16px 0;
+                box-shadow: 0 1px 3px rgba(88, 28, 135, .08);
+              }}
+              .kicker {{
+                font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+                color: var(--muted); margin: 14px 0 4px; font-weight: 600;
+              }}
+              .kicker:first-child {{ margin-top: 0; }}
+              .question {{ font-size: 17px; color: var(--ink); margin-bottom: 6px; }}
+              .tool-name code {{
+                background: #f3e8ff; padding: 4px 10px; border-radius: 6px;
+                font-size: 14px; color: var(--primary); font-weight: 600;
+              }}
+              pre {{
+                background: #1f1b2e; color: #e9d5ff; padding: 18px 20px;
+                border-radius: 8px; overflow-x: auto; margin: 6px 0 0;
+                font-family: Consolas, Menlo, monospace; font-size: 13px; line-height: 1.55;
+              }}
+              .footer {{
+                margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border);
+                color: var(--muted); font-size: 13px; text-align: center;
+              }}
+              .footer code {{ background: #f3e8ff; padding: 2px 6px; border-radius: 4px; }}
+              a {{ color: var(--accent); }}
+            </style>
+          </head>
+          <body>
+            <div class="hero">
+              <div class="hero-inner">
+                <div class="kicker">Model Context Protocol · Microsoft 365</div>
+                <h1>M365 Audit MCP server - live demo</h1>
+                <p>Each card below shows a natural-language question, the MCP
+                tool the agent picks for it, and the structured JSON the tool
+                returns. Wire this server into Claude Desktop / Cursor / any
+                MCP client and you can have this conversation yourself.</p>
+              </div>
+            </div>
+
+            <div class="container">
+              {''.join(card(label, q, r) for label, q, r in CASES)}
+
+              <div class="footer">
+                Regenerated on every push from the live mocked backend.
+                Install: <code>pip install -e .</code> then <code>m365-audit-mcp</code>.<br>
+                Source: <a href="https://github.com/derekgallardo01/m365-audit-mcp">github.com/derekgallardo01/m365-audit-mcp</a>
+              </div>
+            </div>
+          </body>
+          </html>
+          """
+          with open("site/index.html", "w", encoding="utf-8") as fh:
+              fh.write(page)
+          print("wrote site/index.html")
+          PY
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
