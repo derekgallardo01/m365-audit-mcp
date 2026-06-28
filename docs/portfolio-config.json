@@ -1,0 +1,12 @@
+{
+  "repo": "m365-audit-mcp",
+  "title": "M365 Audit MCP Server",
+  "tagline": "Microsoft 365 privacy + compliance audit checks exposed as MCP tools for Claude Desktop, Cursor, and Agent SDK builds.",
+  "kicker": "Model Context Protocol · Microsoft 365 · Capability Demo",
+  "features": [
+    {"label": "Tools", "value": "5 audit primitives"},
+    {"label": "Tests", "value": "11 pytest"},
+    {"label": "Backend swap", "value": "Mock → MS Graph"}
+  ],
+  "theme": {"primary": "#581c87", "accent": "#9333ea"}
+}

@@ -1,5 +1,9 @@
 # M365 Audit MCP server
 
+[![CI](https://github.com/derekgallardo01/m365-audit-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/derekgallardo01/m365-audit-mcp/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](#) [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/derekgallardo01/m365-audit-mcp)
+
+**Docs:** [Getting started](docs/getting-started.md) · [Architecture](docs/architecture.md) · [Customization](docs/customization.md) · [Evaluation](docs/evaluation.md) · [Diagrams](docs/diagrams.md) · [FAQ](docs/faq.md)
+
 An [MCP](https://modelcontextprotocol.io) server that exposes Microsoft 365
 privacy / compliance audit checks as tools any MCP client (Claude Desktop,
 Cursor, VS Code, custom Agent SDK builds) can call.
@@ -19,6 +23,19 @@ python -m pytest -q     # 11 unit tests covering every tool
 
 Stdlib-only Python except for the `mcp` SDK itself. No real M365 tenant
 required to develop against.
+
+## Run in Docker
+
+```bash
+docker build -t m365-audit-mcp .
+docker run --rm m365-audit-mcp python -m pytest -q       # run tests in the image
+docker run --rm -i m365-audit-mcp                        # run the server (stdio)
+```
+
+For Claude Desktop / Cursor integration, prefer the `pip install -e .`
+path on the host — MCP clients launch the server as a subprocess and
+talk to it via pipes, which is awkward through Docker. The Dockerfile
+is for CI, packaging, and remote-hosted deployments.
 
 ## What it's for
 
