@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install (editable) + test deps
+        run: |
+          pip install --quiet --upgrade pip
+          pip install --quiet -e .
+          pip install --quiet pytest
+      - name: Unit tests
+        run: python -m pytest -q
+      - name: Smoke-test the server can import + register tools
+        run: |
+          python -c "
+          from m365_audit_mcp.server import mcp
+          # FastMCP keeps registered tools internally; just confirm the module imports
+          # and the mcp object is alive.
+          assert mcp.name == 'm365-audit'
+          print('OK: m365-audit MCP server module imports and FastMCP instance is alive')
+          "

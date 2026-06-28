@@ -1,0 +1,24 @@
+[project]
+name = "m365-audit-mcp"
+version = "1.0.0"
+description = "MCP server that exposes Microsoft 365 privacy/compliance audit checks as tools for Claude Desktop / Cursor / any MCP client."
+authors = [{name = "Derek Gallardo", email = "derekgallardo01@gmail.com"}]
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.0.0",
+]
+
+[project.scripts]
+m365-audit-mcp = "m365_audit_mcp.server:main"
+
+[project.urls]
+Repository = "https://github.com/derekgallardo01/m365-audit-mcp"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
