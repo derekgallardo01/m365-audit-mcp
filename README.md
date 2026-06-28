@@ -4,6 +4,12 @@
 
 **Docs:** [Getting started](docs/getting-started.md) · [Architecture](docs/architecture.md) · [Customization](docs/customization.md) · [Evaluation](docs/evaluation.md) · [Diagrams](docs/diagrams.md) · [FAQ](docs/faq.md)
 
+**Live demo:** [derekgallardo01.github.io/m365-audit-mcp](https://derekgallardo01.github.io/m365-audit-mcp/) — sample question + tool invocation + JSON response for each of the 5 tools, regenerated on every push.
+
+[![Live demo preview](docs/screenshots/02-hero.png)](https://derekgallardo01.github.io/m365-audit-mcp/)
+
+[Full-page capture (all 5 tools) →](docs/screenshots/01-overview-fullpage.png)
+
 An [MCP](https://modelcontextprotocol.io) server that exposes Microsoft 365
 privacy / compliance audit checks as tools any MCP client (Claude Desktop,
 Cursor, VS Code, custom Agent SDK builds) can call.
