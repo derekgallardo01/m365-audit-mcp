@@ -43,6 +43,14 @@ path on the host — MCP clients launch the server as a subprocess and
 talk to it via pipes, which is awkward through Docker. The Dockerfile
 is for CI, packaging, and remote-hosted deployments.
 
+## Example: production scenario
+
+**[examples/tenant_health_report.py](examples/tenant_health_report.py)** — Calls all 5 audit tools directly (skipping MCP transport) and builds an executive markdown tenant-health report with the top 3 priority actions surfaced
+
+```bash
+python examples/tenant_health_report.py
+```
+
 ## What it's for
 
 When you're running an M365 / Copilot rollout, the questions that come up
